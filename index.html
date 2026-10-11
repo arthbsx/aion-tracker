@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aion 2 - Tracker de Montures & Familiers</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#121212;--fg:#e0e0e0;--card:#1e1e1e;--line:#333;--btn:#333;--btn-line:#555;--btn-fg:#fff;--muted:#aaa;--dot:#444;--accent:#007bff;--title:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f5f7;--fg:#222;--card:#fff;--line:#d9dce1;--btn:#e8eaee;--btn-line:#c3c7ce;--btn-fg:#222;--muted:#666;--dot:#ccc;--title:#111}}
+:root[data-theme="light"]{--bg:#f4f5f7;--fg:#222;--card:#fff;--line:#d9dce1;--btn:#e8eaee;--btn-line:#c3c7ce;--btn-fg:#222;--muted:#666;--dot:#ccc;--title:#111}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:20px}
+h1{font-size:24px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-top:0}
+.filters{margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap}
+button{background:var(--btn);border:1px solid var(--btn-line);color:var(--btn-fg);padding:8px 16px;cursor:pointer;border-radius:4px}
+button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:15px}
+.card{background:var(--card);padding:15px;border-radius:8px;border:1px solid var(--line)}
+.card h3{margin:0 0 10px;font-size:18px;color:var(--title)}
+.location{font-size:13px;color:var(--muted);margin-bottom:15px;min-height:35px;border-bottom:1px dotted var(--dot);padding-bottom:10px}
+.levels{display:flex;justify-content:space-between}
+.level-check{display:flex;flex-direction:column;align-items:center;font-size:12px;cursor:pointer}
+.level-check input{margin-top:5px;width:16px;height:16px;cursor:pointer}
+.genus{font-size:11px;text-transform:uppercase;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:8px;font-weight:bold}
+.progress-container{margin-bottom:20px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:15px;font-size:16px;font-weight:bold}
+#global-progress{color:var(--accent)}
+</style>
+</head>
+<body>
+<h1>Aion 2 - Tracker d'Insight (Montures)</h1>
+<div class="progress-container">Progression globale : <span id="global-progress">0</span> / <span id="total-progress">0</span> niveaux débloqués</div>
+<div class="filters" id="filters"></div>
+<div class="grid" id="pet-grid"></div>
+
+<script>
+const db=[
+{name:"Pagati",genus:"Special",loc:"Achat 2M Kina (Tsenka Merchants) ou Advance Pet Chest"},
+{name:"Black Dragon",genus:"Special",loc:"Daeva's Chest of Might (Ultimate Founder's Pack)"},
+{name:"Swift Lugi",genus:"Special",loc:"Daeva Pass [Saison 1]"},
+{name:"Wandering Merchant Lugi",genus:"Special",loc:"Shugo Festival Trade Shop"},
+{name:"White Bunny",genus:"Special",loc:"Atelier Shop"},
+{name:"Chonky Hamster",genus:"Special",loc:"Atelier Shop"},
+{name:"Two",genus:"Special",loc:"Événement TBA"},
+{name:"Papis",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Crestlich / Male Crestlich",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Sparkie / Giant Sparkie",genus:"Fera",loc:"Ellun River / Altamia Highland (Monstres)"},
+{name:"Fossa",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
+{name:"Armadon / Aberrant Armadon",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
+{name:"Tog / Young Tog",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
+{name:"Odyle Spider",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Karnif / Modified Karnif",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Drakan Guard Dog",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Slink / Young Slink",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Ursus / Young Ursus",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Kailin / Young Kailin",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Brax",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Zaif / Aberrant Zaif",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Vivel",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Manduri Fighter / Trebuchet",genus:"Cogni",loc:"Black Claw Village, Pilgrim's Ridge"},
+{name:"Klaw / Klaw Scout",genus:"Cogni",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Krall Laborer / Warrior",genus:"Cogni",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Elite Dratona",genus:"Cogni",loc:"Coffres / Black Cloud Merchants uniquement"},
+{name:"Zelophi",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Fungie / Fungen",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Forest Spirit / Guardian",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Withered Agrint / Agrint",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Stone Spirit",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Element Spirits",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
+{name:"Kalgolem / Blue Kalgolem",genus:"Varian",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"}
+];
+const KEY='aion2_pets_tracker';
+const colors={Special:'#ffd700',Fera:'#ff4d4d',Natura:'#4dff4d',Cogni:'#4da6ff',Varian:'#d44dff'};
+let saved={};
+try{saved=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){saved={}}
+let filter='All';
+
+function buildFilters(){
+  const f=document.getElementById('filters');
+  const genera=['All',...Object.keys(colors).sort((a,b)=>['Fera','Natura','Cogni','Varian','Special'].indexOf(a)-['Fera','Natura','Cogni','Varian','Special'].indexOf(b))];
+  f.innerHTML=genera.map(g=>{
+    const n=g==='All'?'':` (${db.filter(p=>p.genus===g).length})`;
+    return `<button data-filter="${g}" class="${g===filter?'active':''}">${g==='All'?'Tous':g}${n}</button>`;
+  }).join('');
+}
+
+function render(){
+  const grid=document.getElementById('pet-grid');
+  grid.innerHTML='';
+  db.forEach(pet=>{
+    if(filter!=='All'&&pet.genus!==filter)return;
+    const c=colors[pet.genus];
+    const card=document.createElement('div');
+    card.className='card';
+    let h=`<div class="genus" style="background:${c}33;color:${c}">${pet.genus}</div><h3>${pet.name}</h3><div class="location">${pet.loc}</div><div class="levels">`;
+    for(let i=1;i<=3;i++){
+      const k=`${pet.name}_L${i}`;
+      h+=`<label class="level-check"><span>Niv ${i}</span><input type="checkbox" data-key="${k}" ${saved[k]?'checked':''}></label>`;
+    }
+    card.innerHTML=h+'</div>';
+    grid.appendChild(card);
+  });
+  const valid=new Set(db.flatMap(p=>[1,2,3].map(i=>`${p.name}_L${i}`)));
+  document.getElementById('global-progress').textContent=Object.keys(saved).filter(k=>saved[k]&&valid.has(k)).length;
+  document.getElementById('total-progress').textContent=db.length*3;
+}
+
+document.getElementById('pet-grid').addEventListener('change',e=>{
+  if(e.target.type!=='checkbox')return;
+  saved[e.target.dataset.key]=e.target.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(err){}
+  render();
+});
+document.getElementById('filters').addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b)return;
+  filter=b.dataset.filter;
+  buildFilters();
+  render();
+});
+
+buildFilters();
+render();
+</script>
+</body>
+</html>

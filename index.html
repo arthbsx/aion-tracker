@@ -35,7 +35,7 @@ button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
 </head>
 <body>
-<h1>Aion 2 - Tracker d'Insight (Montures)</h1>
+<h1>Aion 2 - Tracker d'Insight (Familiers)</h1>
 <div class="progress-container">Progression globale : <span id="global-progress">0</span> / <span id="total-progress">0</span> niveaux débloqués</div>
 <div class="filters">
 <div class="fgroup"><span class="flabel">Recherche</span><input class="search" id="search" type="search" placeholder="Nom d'une monture…"></div>
@@ -45,45 +45,40 @@ button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 <div class="grid" id="pet-grid"></div>
 
 <script>
-const db=[
-{name:"Pagati",genus:"Special",loc:"Achat 2M Kina (Tsenka Merchants) ou Advance Pet Chest"},
-{name:"Black Dragon",genus:"Special",loc:"Daeva's Chest of Might (Ultimate Founder's Pack)"},
-{name:"Swift Lugi",genus:"Special",loc:"Daeva Pass [Saison 1]"},
-{name:"Wandering Merchant Lugi",genus:"Special",loc:"Shugo Festival Trade Shop"},
-{name:"White Bunny",genus:"Special",loc:"Atelier Shop"},
-{name:"Chonky Hamster",genus:"Special",loc:"Atelier Shop"},
-{name:"Two",genus:"Special",loc:"Événement TBA"},
-{name:"Papis",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Crestlich / Male Crestlich",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Sparkie / Giant Sparkie",genus:"Fera",loc:"Ellun River / Altamia Highland (Monstres)"},
-{name:"Fossa",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
-{name:"Armadon / Aberrant Armadon",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
-{name:"Tog / Young Tog",genus:"Fera",loc:"Quête Épisode Lvl 10 ou Drops monstres"},
-{name:"Odyle Spider",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Karnif / Modified Karnif",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Drakan Guard Dog",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Slink / Young Slink",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Ursus / Young Ursus",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Kailin / Young Kailin",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Brax",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Zaif / Aberrant Zaif",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Vivel",genus:"Fera",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Manduri Fighter / Trebuchet",genus:"Cogni",loc:"Black Claw Village, Pilgrim's Ridge"},
-{name:"Klaw / Klaw Scout",genus:"Cogni",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Krall Laborer / Warrior",genus:"Cogni",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Elite Dratona",genus:"Cogni",loc:"Coffres / Black Cloud Merchants uniquement"},
-{name:"Zelophi",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Fungie / Fungen",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Forest Spirit / Guardian",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Withered Agrint / Agrint",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Stone Spirit",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Element Spirits",genus:"Natura",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"},
-{name:"Kalgolem / Blue Kalgolem",genus:"Varian",loc:"Monstres (5 âmes), Coffres, Black Cloud Merchants"}
-];
+const M="Monstres (5 âmes), Coffres, Black Cloud Merchants",C="Coffres / Black Cloud Merchants uniquement";
+const special=[
+["Pagati","Achat 2M Kina (Tsenka Merchants) ou Advance Pet Chest"],
+["Black Dragon","Daeva's Chest of Might (Ultimate Founder's Pack)"],
+["Swift Lugi","Daeva Pass [Saison 1]"],
+["Wandering Merchant Lugi","Shugo Festival Trade Shop"],
+["White Bunny","Atelier Shop"],
+["Chonky Hamster","Atelier Shop"],
+["Two","Événement TBA"]];
+const groups=[
+["Cogni",M,"Krall Laborer|Krall Warrior|Krall Warshaman|Klaw|Klaw Scout|Elite Klaw|Manduri Fighter|Manduri Elite Fighter|Manduri Trebuchet Worker|Nagarant Guardian Warrior|Aullaeu Shaman|Biruta|Kuru Worker|Kuru Tinkerer|Kuru Overseer|Enhanced Krall Combatant|Enhanced Krall Sentry|Kerubar|Kerubian|Kerubiel|Drakan Watcher|Dracuni Herbalist|Naga Elite Priest|Modified Lupyllini|Decomposed Lupyllini"],
+["Cogni",C,"Elite Dratona|Varg Berserker|Aultross's Doppelganger|Mumu Warrior|Mumu Worker|Mumu Overseer|Urugugu Brawler|Sentinel K'nash|Phantasmal Lakshmi|Pretor Veil Administrator|Biruta Herbalist|Dratona|Dratona Tinkerer|Furious Feruk|Addicted Shulak Cart Worker|Predator Saraswati"],
+["Fera",M,"Papis|Crestlich|Male Crestlich|Sparkie|Giant Sparkie|Fossa|Skama|Aberrant Skama|Aberrant Armadon|Tog|Odyle Spider|Coradon|Starturtle|Brax|Sylphen|Potcrab|Aberrant Potcrab|Skyray|Drakan Guard Dog|Kailin|Young Kailin|Slink|Young Slink|Crasaur|Lupyllini|Airon|Cave Bat|Ursus|Young Ursus|Giant Bee|Aberrant Bee|Scorpion|Spider|Ashen Spider|Unstable Spider|Karnif|Modified Karnif|Zaif|Aberrant Zaif|Vivel"],
+["Fera",C,"Elite Keneire|Kernon|Aberrant Odyle Spider|Elite Ursus|Armadon|Grave Rat|Cadaver Insectoid|Young Tog|Ashen Basilisk|Flame Barghest"],
+["Natura",M,"Zelophi|Fungie|Fungen|Forest Spirit|Mutated Forest Spirit|Gravi|Large Leaf Gravi|Magic Gravi|Forest Specter|Withered Agrint|Agrint|Korutin Worker|Stone Spirit|Nepenthes|Lesser Element Spirit|Intermediate Element Spirit|Superior Element Spirit|Forest Guardian|Odyle Store Spirit|Drana Spore|Rufflesia"],
+["Natura",C,"Black Smoke Murute|Ultimate Wind Spirit|Ultimate Fire Spirit|Ultimate Water Spirit|Ultimate Earth Spirit|Dionae|Forest Dionae|Ashen Dionae|Red Spark Ignus|Dried Up Forest Guardian|Mutated Forest Guardian|Ancient Spirit|Spirit King's Bodyguard Warrior|Elite Poisonous Spore Fungen|Ashen Agrint|Thin Agrint|Dry Leaf Agrint|Black Spirit"],
+["Varian",M,"Kalgolem|Blue Kalgolem|Marsh Targon|Swarm|Drana Swarm|Drakan Probe|Oculazen|Vigilant Oculazen|Pino|Pino Worker|Swamp Monster|Forest Monster|Drana Predator|Silver Blade Rotan|Guardite|Guardite Watcher|Elite Guardite|Dark Spirit"],
+["Varian",C,"Drakana Kalgolem|Krao Mutant|Krao Test Subject|Krao Seal Guardian|Slime|Drana Slime|Contaminated Slime|Harcon|Distorted Mutant|Gatekeeper Pinopi|Drana Mutant Brute|Fated Mutant Brute|Cadaver Cleaner|Parasite Swarm|Drana Contaminant|Drana Mutant|Faded Drana Mutant|Fated Floater|Flame Stone Guardian Statue|Duduka Worker|Duduka Trebuchet Worker|Faded Predator|Mudthorn|Poison Blood|Elite Soulless Corpse Gnat|Congealed Drana|Faded Drana"]];
+const EXTRA={"Sparkie":" — Ellun River / Altamia Highland","Giant Sparkie":" — Ellun River / Altamia Highland","Manduri Fighter":" — Black Claw Village, Pilgrim's Ridge","Manduri Trebuchet Worker":" — Black Claw Village, Pilgrim's Ridge","Fossa":" — Quête Épisode 1 (Kaidros), récompense au choix","Armadon":" — Quête Épisode 1 (Kaidros), récompense au choix","Tog":" — Quête Épisode 1 (Kaidros), récompense au choix","Papis":" — Coffre de sélection de départ","Silver Blade Rotan":" — Coffre de sélection de départ","Korutin Worker":" — Coffre de sélection de départ","Black Smoke Murute":" — Coffre de sélection de départ","Elite Soulless Corpse Gnat":" (toutes variantes)"};
+const db=[];
+special.forEach(([name,loc])=>db.push({name,genus:"Special",loc}));
+groups.forEach(([genus,loc,list])=>list.split("|").forEach(name=>db.push({name,genus,loc:loc+(EXTRA[name]||"")})));
 const KEY='aion2_pets_tracker';
 const colors={Special:'#ffd700',Fera:'#ff4d4d',Natura:'#4dff4d',Cogni:'#4da6ff',Varian:'#d44dff'};
 let saved={};
 try{saved=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){saved={}}
+const ALIAS={"Trebuchet":"Manduri Trebuchet Worker","Warrior":"Krall Warrior","Guardian":"Forest Guardian","Element Spirits":["Lesser Element Spirit","Intermediate Element Spirit","Superior Element Spirit"]};
+(function(){const names=new Set(db.map(p=>p.name));let mig=false;
+Object.keys(saved).forEach(k=>{const m=k.match(/^(.+)_L([123])$/);if(!m||!saved[k])return;const old=m[1];
+if(!old.includes(" / ")&&old!=="Element Spirits")return;
+const parts=old==="Element Spirits"?ALIAS[old]:old.split(" / ").map(x=>ALIAS[x]||x);
+parts.forEach(n=>{const nk=`${n}_L${m[2]}`;if(names.has(n)&&!(nk in saved)){saved[nk]=true;mig=true}})});
+if(mig)try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}})();
+
 const f={genus:'All',status:'All',source:'All',q:''};
 const GENERA=['Fera','Natura','Cogni','Varian','Special'];
 const STATUS=[['All','Tous'],['todo','Non commencé'],['doing','En cours'],['done','Terminé'],['n1','Niv 1 à faire'],['n2','Niv 2 à faire'],['n3','Niv 3 à faire']];
